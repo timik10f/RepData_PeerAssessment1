@@ -1,22 +1,16 @@
-
-Firstly, I change directory and read the data:
+Firstly, I clear all the variables, set figure path for knitr, change directory and read the data:
 
 
 
 ```r
 rm(list = ls())
 fig.path = "C:/Users/Timur/Documents/Coursera5/RepData_PeerAssessment1"
+#changing directroy to where csv file is
 setwd("C:/Users/Timur/Documents/Coursera5/RepData_PeerAssessment1/activity/")
+# reading data
 data1 <-read.csv("activity.csv", header = TRUE)
+#going to working directory
 setwd("C:/Users/Timur/Documents/Coursera5/RepData_PeerAssessment1/")
-str(data1)
-```
-
-```
-## 'data.frame':	17568 obs. of  3 variables:
-##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 
 Then I remove all the rows with NAs:
@@ -24,22 +18,6 @@ Then I remove all the rows with NAs:
 
 ```r
 dataWONA <- data1[complete.cases(data1[,]),]
-str(dataWONA)
-```
-
-```
-## 'data.frame':	15264 obs. of  3 variables:
-##  $ steps   : int  0 0 0 0 0 0 0 0 0 0 ...
-##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 2 2 2 2 2 2 2 2 2 2 ...
-##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
-```
-
-```r
-sum(dataWONA$steps)
-```
-
-```
-## [1] 570608
 ```
 
 Histogram of total number of steps taken per day:
@@ -47,17 +25,7 @@ Histogram of total number of steps taken per day:
 
 ```r
 dataByDay2 <- aggregate(steps ~ date, dataWONA, sum)
-str(dataByDay2)
-```
-
-```
-## 'data.frame':	53 obs. of  2 variables:
-##  $ date : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 2 3 4 5 6 7 9 10 11 12 ...
-##  $ steps: int  126 11352 12116 13294 15420 11015 12811 9900 10304 17382 ...
-```
-
-```r
-hist(dataByDay2$steps)
+hist(dataByDay2$steps, main = "Histogram of total number of steps taken per day",xlab = "Number of steps taken per day")
 ```
 
 ![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png)
@@ -65,19 +33,21 @@ hist(dataByDay2$steps)
 Calculating the mean and median of steps taken per day:
 
 ```r
-mean(dataByDay2$steps)
+meanPerDay <- mean(dataByDay2$steps)
+cat("Mean number of steps per day = ",meanPerDay, "\n")
 ```
 
 ```
-## [1] 10766.19
+## Mean number of steps per day =  10766.19
 ```
 
 ```r
-median(dataByDay2$steps)
+medianPerDay <- median(dataByDay2$steps)
+cat("Median of steps per day = ",medianPerDay, "\n")
 ```
 
 ```
-## [1] 10765
+## Median of steps per day =  10765
 ```
 
 
@@ -85,7 +55,7 @@ Number of steps taken per each interval (averaged over days):
 
 ```r
 dataByInterval <- aggregate(steps ~ interval, dataWONA, mean)
-plot(dataByInterval$interval,dataByInterval$steps, type = "l")
+plot(dataByInterval$interval,dataByInterval$steps, type = "l",main = "Number of steps taken on average for time interval",xlab = "Time interval",ylab = "Number of steps")
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
@@ -93,42 +63,30 @@ plot(dataByInterval$interval,dataByInterval$steps, type = "l")
 Now, taking initial data and calculating number of NAs:
 
 ```r
-sum(is.na(data1$steps))
+numberOfNA <- sum(is.na(data1$steps))
+cat("Number of NA elemetns is", numberOfNA)
 ```
 
 ```
-## [1] 2304
+## Number of NA elemetns is 2304
 ```
 
 Each of NA would be replaced by the average amount of steps for this interval:
 
 
 ```r
-str(dataByInterval)
-```
-
-```
-## 'data.frame':	288 obs. of  2 variables:
-##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
-##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
-```
-
-```r
+# copy of initial dataset
 data2 <- data1
+
+# creating a vector that will contain replacements for NAs - amount of steps for this interval
 replacement <- rep.int(0, sum(is.na(data1$steps)))
 IntervalOfNa <- data2[is.na(data1$steps),3]
 for (i in 1:sum(is.na(data1$steps))) {
-  replacement[i] <- dataByInterval[which(dataByInterval$interval==IntervalOfNa[i]),2]
+        replacement[i] <- dataByInterval[which(dataByInterval$interval==IntervalOfNa[i]),2]
 }
-data2[is.na(data1$steps),1] <- replacement
-str(data2)
-```
 
-```
-## 'data.frame':	17568 obs. of  3 variables:
-##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
-##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+# replacing the NA values
+data2[is.na(data1$steps),1] <- replacement
 ```
 
 
@@ -137,17 +95,7 @@ Histogram of total number of steps taken per day:
 
 ```r
 dataByDay3 <- aggregate(steps ~ date, data2, sum)
-str(dataByDay3)
-```
-
-```
-## 'data.frame':	61 obs. of  2 variables:
-##  $ date : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 2 3 4 5 6 7 8 9 10 ...
-##  $ steps: num  10766 126 11352 12116 13294 ...
-```
-
-```r
-hist(dataByDay3$steps)
+hist(dataByDay3$steps, main = "Histogram of total number of steps taken per day, with imputed values",xlab = "Number of steps taken per day")
 ```
 
 ![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
@@ -155,24 +103,27 @@ hist(dataByDay3$steps)
 Calculating the mean and median of steps taken per day:
 
 ```r
-mean(dataByDay3$steps)
+meanPerDay3 <- mean(dataByDay3$steps)
+cat("Mean number of steps per day with imputing values = ",meanPerDay3, "\n")
 ```
 
 ```
-## [1] 10766.19
+## Mean number of steps per day with imputing values =  10766.19
 ```
 
 ```r
-median(dataByDay3$steps)
+medianPerDay3 <- median(dataByDay3$steps)
+cat("Median of steps per day with imputing values = ",medianPerDay3, "\n")
 ```
 
 ```
-## [1] 10766.19
+## Median of steps per day with imputing values =  10766.19
 ```
 
 
 As a result of imputing missing data, mean did not change, but median changed.
-
+  
+  
 Finding number of steps in interval averaged across weekdays and weekends:
 
 
@@ -181,8 +132,10 @@ data2$day <- weekdays(as.Date(data2$date))
 dataByIntervalWeekEnd <- aggregate(steps ~ interval, data2[data2$day == "Sunday"|data2$day == "Saturday",], mean)
 dataByIntervalWeekDay <- aggregate(steps ~ interval, data2[data2$day != "Sunday" & data2$day != "Saturday",], mean)
 par(mfrow=c(2,1))
-plot(dataByIntervalWeekEnd$interval,dataByIntervalWeekEnd$steps, type = "l")
-plot(dataByIntervalWeekDay$interval,dataByIntervalWeekDay$steps, type = "l")
+par(mar=c(1.5, 4.5, 1.5, 0.5))
+plot(dataByIntervalWeekEnd$interval,dataByIntervalWeekEnd$steps, type = "l",ylab = "Number of steps", xlab = "interval",col = "blue", main = "weeekend")
+plot(dataByIntervalWeekDay$interval,dataByIntervalWeekDay$steps, type = "l",ylab = "Number of steps", xlab = "interval", col = "blue", main = "weeekday")
 ```
 
 ![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png)
+
